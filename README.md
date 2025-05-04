@@ -85,11 +85,27 @@ Neostow reads from a `.neostow` file in the current directory to determine which
 
 The `.neostow` file should be placed in the root of your project directory. Each line in the file should specify a symlink in the format `source=destination`.
 
+### Examples
+
 Example `.neostow` file:
 
 ```
-config/myconfig=~/.config/myconfig
-scripts/myscript.sh=~/bin/myscript
+config/myconfig=/home/user/.config/myconfig
+scripts/myscript.sh=/home/user/bin/myscript
+```
+
+Declaring files:
+
+```
+forg.conf=$HOME/.local/share/
+```
+
+Declaring folders:
+
+```
+.local/bin/=$HOME/.local/
+.config/alacritty/=$HOME/.config/
+.gnupg/=$HOME/
 ```
 
 ## License
