@@ -1,19 +1,16 @@
 #!/usr/bin/env bash
 
 NEOSTOW_FILE="$PWD/.neostow"
+PATH=$PWD
 
-if [[ ! -f "$NEOSTOW_FILE" ]]; then
-  echo "Error: $NEOSTOW_FILE not found"
-  exit 1
-fi
-
-function usage() {
+function help() {
   cat <<EOF
 Neostow
 Usage: neostow [flag] [command]
 Available flags:
--r                     - Overwrite symlinks
 -d                     - Remove all symlinks
+-r                     - Overwrite symlinks
+-t                     - Target a different project directory
 Available commands:
 adopt                  - Adopt already existing file or directory
 help                   - Displays this message and exits
@@ -22,7 +19,7 @@ EOF
 
 function create_links() {
   local source_file dest_folder
-  source_file="$PWD/$1"
+  source_file="$PATH/$1"
   dest_folder=$2
   if [ -n "$OVERWRITE" ]; then
     ln -sf "$source_file" "$dest_folder"
@@ -38,7 +35,7 @@ function create_links() {
 
 function adopt() {
   local source_file dest_folder
-  source_file="$PWD/$1"
+  source_file="$PATH/$1"
   dest_folder=$2
   file=$(basename "$source_file")
   cp -r --force "$dest_folder/$file" "$source_file"
@@ -47,6 +44,10 @@ function adopt() {
 }
 
 function main() {
+  if [[ ! -f "$NEOSTOW_FILE" ]]; then
+    echo "Error: $NEOSTOW_FILE not found"
+    exit 1
+  fi
   local file_lines i threshold source_file dest_folder working_data
   declare -i file_lines
   declare -i i
@@ -66,7 +67,7 @@ function main() {
   done
 }
 
-while getopts ":hdr" opt; do
+while getopts ":hdrt:" opt; do
   case "$opt" in
   r)
     OVERWRITE=true
@@ -75,8 +76,12 @@ while getopts ":hdr" opt; do
     DELETE=true
     ;;
   h)
-    usage
+    help
     exit 0
+    ;;
+  t)
+    PATH="$OPTARG"
+    NEOSTOW_FILE="$OPTARG/.neostow"
     ;;
   ?)
     echo "Error: Invalid option '-$OPTARG'" >&2
@@ -87,15 +92,16 @@ done
 
 shift $((OPTIND - 1))
 
-main
-
 case "$1" in
 help)
-  usage
+  help
   exit 0
   ;;
 adopt)
-  adotp
+  adopt
   exit 0
+  ;;
+"")
+  main
   ;;
 esac
