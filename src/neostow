@@ -13,7 +13,6 @@ Available flags:
 -t <absolute_path>       - Target a different project directory
 -v                       - Enable verbose
 Available commands:
-adopt                  - Adopt already existing file or directory
 help                   - Displays this message and exits
 EOF
 }
@@ -38,16 +37,6 @@ function create_links() {
   if [ -n "$VERBOSE" ]; then
     echo "$message symlink: $dest_folder/$file"
   fi
-}
-
-function adopt() {
-  local source_file dest_folder
-  source_file="$1"
-  dest_folder=$2
-  file=$(basename "$source_file")
-  cp -r --force "$dest_folder/$file" "$source_file"
-  rm "$dest_folder/$file"
-  ln -s "$source_file" "$dest_folder"
 }
 
 function main() {
@@ -110,10 +99,6 @@ shift $((OPTIND - 1))
 case "$1" in
 help)
   help
-  exit 0
-  ;;
-adopt)
-  ADOPT=true
   exit 0
   ;;
 esac
