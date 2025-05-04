@@ -15,6 +15,7 @@ Available flags:
 -r                     - Overwrite symlinks
 -d                     - Remove all symlinks
 Available commands:
+adopt                  - Adopt already existing file or directory
 help                   - Displays this message and exits
 EOF
 }
@@ -28,9 +29,21 @@ function create_links() {
   elif [ -n "$DELETE" ]; then
     file=$(basename "$source_file")
     rm "$dest_folder/$file"
+  elif [ -n "$ADOTP" ]; then
+    adopt "$source_file" "$dest_folder"
   else
     ln -s "$source_file" "$dest_folder"
   fi
+}
+
+function adopt() {
+  local source_file dest_folder
+  source_file="$PWD/$1"
+  dest_folder=$2
+  file=$(basename "$source_file")
+  cp -r --force "$dest_folder/$file" "$source_file"
+  rm "$dest_folder/$file"
+  ln -s "$source_file" "$dest_folder"
 }
 
 function main() {
@@ -81,3 +94,8 @@ help)
   usage
   exit 0
   ;;
+adopt)
+  adotp
+  exit 0
+  ;;
+esac
