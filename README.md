@@ -56,6 +56,12 @@ Neostow reads from a `.neostow` file in the current directory to determine which
     neostow -d
     ```
 
+- **Use a different project directory**
+
+```bash
+   neostow stow -t
+```
+
 - **Adopt Existing File or Directory**:
 
     ```sh
@@ -69,9 +75,10 @@ Neostow reads from a `.neostow` file in the current directory to determine which
 
 ### Flags
 
-- `-r`: Overwrite existing symlinks.
 - `-d`: Remove all created symlinks.
 - `-h`: Display the help message and exit.
+- `-r`: Overwrite existing symlinks.
+- `-t`: Change project directory.
 
 ## Configuration File
 
