@@ -59,7 +59,7 @@ Neostow reads from a `.neostow` file in the current directory to determine which
 - **Use a different project directory**
 
 ```bash
-   neostow -t
+   neostow -t <absolute_path>
 ```
 
 - **Adopt Existing File or Directory**:
