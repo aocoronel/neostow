@@ -20,7 +20,7 @@ fi
 
 function create_links() {
   local source_file dest_folder
-  source_file="$1"
+  source_file="$PWD/$1"
   dest_folder=$2
   if [ -n "$OVERWRITE" ]; then
     ln -sf "$source_file" "$dest_folder"
@@ -36,22 +36,19 @@ function main() {
   local file_lines i threshold source_file dest_folder working_data
   declare -i file_lines
   declare -i i
-  file_lines=$(wc -l "$NEOSTOW_FILE" | awk '{print $1}')
+  file_lines=$(wc -l <"$NEOSTOW_FILE")
   i=1
-  declare -i threshold=("$file_lines"+"$i")
-  for line in $i; do
-    if [ "$line" -eq "$threshold" ]; then
-      break
-    fi
-    working_data=$PWD/$(bat --line-range "$line" "$NEOSTOW_FILE")
+  declare -i threshold=("$file_lines"+1)
+
+  while [ "$i" -lt "$threshold" ]; do
+    working_data=$(bat --line-range "$i":"$i" "$NEOSTOW_FILE")
     source_file=$(awk -F '=' '{print $1}' <<<"$working_data")
-    if [[ -f "$source_file" ]]; then
+    if [[ -f "$source_file" ]] || [[ -d "$source_file" ]]; then
       dest_folder=$(awk -F '=' '{print $2}' <<<"$working_data")
       eval dest_folder="$dest_folder"
       create_links "$source_file" "$dest_folder"
-    else
-      continue
     fi
+    i+=1
     unset working_data
   done
 }
