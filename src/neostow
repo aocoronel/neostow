@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 NEOSTOW_FILE="$PWD/.neostow"
-PATH=$PWD
+DIR=$PWD
 
 function help() {
   cat <<EOF
@@ -19,14 +19,14 @@ EOF
 
 function create_links() {
   local source_file dest_folder
-  source_file="$PATH/$1"
+  source_file="$DIR/$1"
   dest_folder=$2
   if [ -n "$OVERWRITE" ]; then
     ln -sf "$source_file" "$dest_folder"
   elif [ -n "$DELETE" ]; then
     file=$(basename "$source_file")
     rm "$dest_folder/$file"
-  elif [ -n "$ADOTP" ]; then
+  elif [ -n "$ADOPT" ]; then
     adopt "$source_file" "$dest_folder"
   else
     ln -s "$source_file" "$dest_folder"
@@ -35,7 +35,7 @@ function create_links() {
 
 function adopt() {
   local source_file dest_folder
-  source_file="$PATH/$1"
+  source_file="$DIR/$1"
   dest_folder=$2
   file=$(basename "$source_file")
   cp -r --force "$dest_folder/$file" "$source_file"
@@ -80,7 +80,7 @@ while getopts ":hdrt:" opt; do
     exit 0
     ;;
   t)
-    PATH="$OPTARG"
+    DIR="$OPTARG"
     NEOSTOW_FILE="$OPTARG/.neostow"
     ;;
   ?)
@@ -98,10 +98,9 @@ help)
   exit 0
   ;;
 adopt)
-  adopt
+  ADOPT=true
   exit 0
   ;;
-"")
-  main
-  ;;
 esac
+
+main
