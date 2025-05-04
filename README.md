@@ -79,6 +79,7 @@ Neostow reads from a `.neostow` file in the current directory to determine which
 - `-h`: Display the help message and exit.
 - `-r`: Overwrite existing symlinks.
 - `-t`: Change project directory.
+- `-v`: Enable verbose.
 
 ## Configuration File
 

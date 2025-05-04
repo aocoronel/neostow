@@ -11,6 +11,7 @@ Available flags:
 -d                       - Remove all symlinks
 -r                       - Overwrite symlinks
 -t <absolute_path>       - Target a different project directory
+-v                       - Enable verbose
 Available commands:
 adopt                  - Adopt already existing file or directory
 help                   - Displays this message and exits
@@ -18,18 +19,24 @@ EOF
 }
 
 function create_links() {
-  local source_file dest_folder
+  local source_file dest_folder file message
   source_file="$1"
   dest_folder=$2
+  file=$(basename "$source_file")
+  message="Created"
   if [ -n "$OVERWRITE" ]; then
     ln -sf "$source_file" "$dest_folder"
   elif [ -n "$DELETE" ]; then
-    file=$(basename "$source_file")
+    message="Deleted"
     rm "$dest_folder/$file"
   elif [ -n "$ADOPT" ]; then
+    message="Adopted"
     adopt "$source_file" "$dest_folder"
   else
     ln -s "$source_file" "$dest_folder"
+  fi
+  if [ -n "$VERBOSE" ]; then
+    echo "$message symlink: $dest_folder/$file"
   fi
 }
 
@@ -61,13 +68,18 @@ function main() {
       dest_folder=$(awk -F '=' '{print $2}' <<<"$working_data")
       eval dest_folder="$dest_folder"
       create_links "$source_file" "$dest_folder"
+    else
+      if [ -n "$VERBOSE" ]; then
+        echo "File or directory $source_file does not exist. Skipping..."
+      fi
+      continue
     fi
     i+=1
     unset working_data
   done
 }
 
-while getopts ":hdrt:" opt; do
+while getopts ":hdrt:v" opt; do
   case "$opt" in
   r)
     OVERWRITE=true
@@ -82,6 +94,9 @@ while getopts ":hdrt:" opt; do
   t)
     DIR="$OPTARG"
     NEOSTOW_FILE="$OPTARG/.neostow"
+    ;;
+  v)
+    VERBOSE=true
     ;;
   ?)
     echo "Error: Invalid option '-$OPTARG'" >&2
