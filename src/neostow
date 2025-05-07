@@ -19,7 +19,6 @@ EOF
 }
 
 function verbose() {
-  val="$?"
   if [ "$WGET" = "true" ]; then
     if [ $val -eq 0 ]; then
       message="Downloaded"
@@ -36,7 +35,7 @@ function verbose() {
 }
 
 function create_links() {
-  local source_file dest_folder file message
+  local source_file dest_folder file message wget_arg
   source_file="$1"
   dest_folder=$2
   file=$(basename "$source_file")
@@ -45,10 +44,17 @@ function create_links() {
     if [ -n "$DELETE" ]; then
       rm "$dest_folder/$file"
     else
-      wget -O "$dest_folder/$file" "$source_file"
+      if [ -n "$VERBOSE" ]; then
+        wget_arg=-v
+      else
+        wget_arg="--no-verbose"
+      fi
+      wget "$wget_arg" -O "$dest_folder/$file" "$source_file"
+      val="$?"
     fi
     if [ -n "$VERBOSE" ]; then
       verbose
+      unset val
     fi
   else
     if [ -n "$OVERWRITE" ]; then
