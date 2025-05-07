@@ -10,7 +10,7 @@ The declarative nature of Neostow allows to easily make reproducible and granula
 - **Per-Project Configuration**: Maintain a `.neostow` configuration file per project.
 - **Overwrite Symlinks**: Optionally overwrite existing symlinks.
 - **Remove Symlinks**: Easily remove all created symlinks.
-- **Adopt Existing Files**: Adopt already existing files or directories into the symlink management.
+- **Get files from the web**: Configure links to files in the web to be automatically downloaded to the right location (WIP).
 
 ## Installation
 
