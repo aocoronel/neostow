@@ -10,6 +10,7 @@ Usage: neostow [flag] [command]
 Available flags:
 -d                       - Remove all symlinks
 -r                       - Overwrite symlinks
+-s                       - Skip Wget Download
 -t <absolute_path>       - Target a different project directory
 -v                       - Enable verbose
 Available commands:
@@ -17,25 +18,50 @@ help                   - Displays this message and exits
 EOF
 }
 
+function verbose() {
+  val="$?"
+  if [ "$WGET" = "true" ]; then
+    if [ $val -eq 0 ]; then
+      message="Downloaded"
+    else
+      message="Failed to download"
+    fi
+    if [ -n "$DELETE" ]; then
+      message="Deleted"
+    fi
+    echo "$message: $raw_source"
+    return
+  fi
+  echo "$message: $dest_folder/$file"
+}
+
 function create_links() {
   local source_file dest_folder file message
   source_file="$1"
   dest_folder=$2
   file=$(basename "$source_file")
-  message="Created"
-  if [ -n "$OVERWRITE" ]; then
-    ln -sf "$source_file" "$dest_folder"
-  elif [ -n "$DELETE" ]; then
-    message="Deleted"
-    rm "$dest_folder/$file"
-  elif [ -n "$ADOPT" ]; then
-    message="Adopted"
-    adopt "$source_file" "$dest_folder"
+  message="Created symlink"
+  if [[ "$WGET" = "true" ]]; then
+    if [ -n "$DELETE" ]; then
+      rm "$dest_folder/$file"
+    else
+      wget -O "$dest_folder/$file" "$source_file"
+    fi
+    if [ -n "$VERBOSE" ]; then
+      verbose
+    fi
   else
-    ln -s "$source_file" "$dest_folder"
-  fi
-  if [ -n "$VERBOSE" ]; then
-    echo "$message symlink: $dest_folder/$file"
+    if [ -n "$OVERWRITE" ]; then
+      ln -sf "$source_file" "$dest_folder"
+    elif [ -n "$DELETE" ]; then
+      message="Deleted symlink"
+      rm "$dest_folder/$file"
+    else
+      ln -s "$source_file" "$dest_folder"
+    fi
+    if [ -n "$VERBOSE" ]; then
+      verbose
+    fi
   fi
 }
 
@@ -52,23 +78,38 @@ function main() {
   declare -i threshold=("$file_lines"+1)
   while [ "$i" -lt "$threshold" ]; do
     working_data=$(bat --line-range "$i":"$i" "$NEOSTOW_FILE")
-    source_file="$DIR/$(awk -F '=' '{print $1}' <<<"$working_data")"
-    if [[ -f "$source_file" ]] || [[ -d "$source_file" ]]; then
+    source_file="$(awk -F '=' '{print $1}' <<<"$working_data")"
+    raw_source="$source_file"
+    case "$source_file" in
+    https://*)
+      if [ -n "$SKIP" ]; then
+        continue
+      fi
+      WGET=true
       dest_folder=$(awk -F '=' '{print $2}' <<<"$working_data")
       eval dest_folder="$dest_folder"
       create_links "$source_file" "$dest_folder"
-    else
-      if [ -n "$VERBOSE" ]; then
-        echo "File or directory $source_file does not exist. Skipping..."
+      ;;
+    *)
+      source_file="$DIR/$source_file"
+      if [[ -f "$source_file" ]] || [[ -d "$source_file" ]]; then
+        dest_folder=$(awk -F '=' '{print $2}' <<<"$working_data")
+        eval dest_folder="$dest_folder"
+        create_links "$source_file" "$dest_folder"
+      else
+        if [ -n "$VERBOSE" ]; then
+          echo "File or directory $source_file does not exist. Skipping..."
+        fi
+        continue
       fi
-      continue
-    fi
+      ;;
+    esac
     i+=1
     unset working_data
   done
 }
 
-while getopts ":hdrt:v" opt; do
+while getopts ":hdrt:vs" opt; do
   case "$opt" in
   r)
     OVERWRITE=true
@@ -86,6 +127,9 @@ while getopts ":hdrt:v" opt; do
     ;;
   v)
     VERBOSE=true
+    ;;
+  s)
+    SKIP=true
     ;;
   ?)
     echo "Error: Invalid option '-$OPTARG'" >&2
