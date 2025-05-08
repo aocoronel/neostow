@@ -9,6 +9,7 @@ Neostow
 Usage: neostow [flag] [command]
 Available flags:
 -d                       - Remove all symlinks
+-h                       - Displays this message and exits
 -r                       - Overwrite symlinks
 -s                       - Skip Wget Download
 -t <absolute_path>       - Target a different project directory
@@ -89,6 +90,8 @@ function main() {
     case "$source_file" in
     https://*)
       if [ -n "$SKIP" ]; then
+        i+=1
+        unset working_data
         continue
       fi
       WGET=true
