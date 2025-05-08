@@ -14,23 +14,17 @@ The declarative nature of Neostow allows to easily make reproducible and granula
 
 ## Installation
 
-1. **Clone the Repository**:
-
-    ```sh
-    git clone https://github.com/yourusername/neostow.git
-    cd neostow
-    ```
-
-2. **Make the Script Executable**:
-
-    ```sh
-    chmod +x neostow
-    ```
-
-3. **Move the Script to a Directory in Your PATH**:
-    ```sh
-    sudo mv neostow /usr/local/bin/
-    ```
+```bash
+# 1. Clone the Repository
+git clone https://github.com/yourusername/neostow.git
+cd neostow
+# 2. Make the Script Executable
+chmod +x neostow
+# 3. Move the Script to a Directory in Your PATH
+mv neostow $HOME/.local/bin
+# OR
+# sudo mv neostow /usr/local/bin/
+```
 
 ## Usage
 
@@ -38,48 +32,20 @@ Neostow reads from a `.neostow` file in the current directory to determine which
 
 ### Commands
 
-- **Create Symlinks**:
-
-    ```sh
-    neostow
-    ```
-
-- **Overwrite Symlinks**:
-
-    ```sh
-    neostow -r
-    ```
-
-- **Remove All Symlinks**:
-
-    ```sh
-    neostow -d
-    ```
-
-- **Use a different project directory**
-
-```bash
-   neostow -t <absolute_path>
 ```
-
-- **Adopt Existing File or Directory**:
-
-    ```sh
-    neostow adopt
-    ```
-
-- **Display Help Message**:
-    ```sh
-    neostow help
-    ```
-
-### Flags
-
-- `-d`: Remove all created symlinks.
-- `-h`: Display the help message and exit.
-- `-r`: Overwrite existing symlinks.
-- `-t`: Change project directory.
-- `-v`: Enable verbose.
+Neostow
+Usage: neostow [flag] [command]
+Available flags:
+-d                       - Remove all symlinks
+-h                       - Displays this message and exits
+-r                       - Overwrite symlinks
+-s                       - Skip Wget Download
+-t <absolute_path>       - Target a different project directory
+-v                       - Enable verbose
+Available commands:
+edit                   - Edit the .neostow file
+help                   - Displays this message and exits
+```
 
 ## Configuration File
 
@@ -90,8 +56,8 @@ The `.neostow` file should be placed in the root of your project directory. Each
 Example `.neostow` file:
 
 ```
-config/myconfig=/home/user/.config/myconfig
-scripts/myscript.sh=/home/user/bin/myscript
+config/myconfig=/home/user/.config/myconfig/
+scripts/myscript.sh=/home/user/bin/myscript/
 ```
 
 Declaring files:
@@ -106,6 +72,26 @@ Declaring folders:
 .local/bin/=$HOME/.local/
 .config/alacritty/=$HOME/.config/
 .gnupg/=$HOME/
+```
+
+Declaring links:
+
+```
+https://raw.githubusercontent.com/janpstrunn/neostow/refs/heads/main/README.md=$HOME/.cache/
+```
+
+## Integration
+
+### [Just](https://github.com/casey/just)
+
+`just` is a handy way to save and run `neostow` commands from any directory within the project.
+
+In or `justfile`, you may create a command like this:
+
+```just
+# Neostow: Skip wget, verbose and overwrite
+neostow:
+  neostow -s -v -r
 ```
 
 ## License
