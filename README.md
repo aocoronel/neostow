@@ -47,52 +47,63 @@ edit                   - Edit the .neostow file
 help                   - Displays this message and exits
 ```
 
-## Configuration File
+### Configuration File
 
 The `.neostow` file should be placed in the root of your project directory. Each line in the file should specify a symlink in the format `source=destination`.
 
-### Examples
+#### Examples
 
 Example `.neostow` file:
 
 ```
-config/myconfig=/home/user/.config/myconfig/
-scripts/myscript.sh=/home/user/bin/myscript/
+config/myconfig=/home/username/.config/myconfig/
+scripts/myscript.sh=/home/username/bin/myscript/
 ```
 
-Declaring files:
+##### Declaring Files
 
 ```
 forg.conf=$HOME/.local/share/
 ```
 
-Declaring folders:
+The `forg.conf` file will be added as: `/home/username/.local/share/forg.conf`
+
+##### Declaring Folders
 
 ```
 .local/bin/=$HOME/.local/
 .config/alacritty/=$HOME/.config/
-.gnupg/=$HOME/
 ```
 
-Declaring links:
+The `.local` directory will be added as: `/home/username/.local/bin/`
+The `.config` directory will be added as: `/home/username/.config/alacritty/`
+
+##### Declaring Links
+
+> [!NOTE]
+> Currently files from the web are not added as symlinks.
 
 ```
 https://raw.githubusercontent.com/janpstrunn/neostow/refs/heads/main/README.md=$HOME/.cache/
 ```
 
-## Integration
+The `README.md` file will be added as: `/home/username/.cache/README.md`
+
+## Integrations
 
 ### [Just](https://github.com/casey/just)
 
 `just` is a handy way to save and run `neostow` commands from any directory within the project.
 
-In or `justfile`, you may create a command like this:
+In or `justfile`, you may create a recipe like this:
 
 ```just
 # Neostow: Skip wget, verbose and overwrite
 neostow:
   neostow -s -v -r
 ```
+
+Then, from any child directory where this `justfile` was placed, you can just run `just neostow`, and it will run the configured recipe.
 
 ## License
 
