@@ -102,7 +102,9 @@ function main() {
       ;;
     *)
       source_file="$DIR/$source_file"
-      if [[ -f "$source_file" ]] || [[ -d "$source_file" ]]; then
+      source_file="$(find $source_file | head -n 1)"
+      val=$?
+      if [[ "$val" -eq 0 ]]; then
         dest_folder=$(awk -F '=' '{print $2}' <<<"$working_data")
         eval dest_folder="$dest_folder"
         create_links "$source_file" "$dest_folder"
