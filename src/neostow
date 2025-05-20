@@ -78,21 +78,13 @@ function main() {
     echo "Error: $NEOSTOW_FILE not found"
     exit 1
   fi
-  local file_lines i threshold source_file dest_folder working_data
-  declare -i file_lines
-  declare -i i
-  file_lines=$(wc -l <"$NEOSTOW_FILE")
-  i=1
-  declare -i threshold=("$file_lines"+1)
-  while [ "$i" -lt "$threshold" ]; do
-    working_data=$(bat --line-range "$i":"$i" "$NEOSTOW_FILE")
+  local source_file dest_folder working_data
+  while IFS= read -r working_data; do
     source_file="$(awk -F '=' '{print $1}' <<<"$working_data")"
     raw_source="$source_file"
     case "$source_file" in
     https://*)
       if [ -n "$SKIP" ]; then
-        i+=1
-        unset working_data
         continue
       fi
       WGET=true
@@ -116,9 +108,7 @@ function main() {
       fi
       ;;
     esac
-    i+=1
-    unset working_data
-  done
+  done <"$NEOSTOW_FILE"
 }
 
 while getopts ":hdrt:vs" opt; do
@@ -158,6 +148,9 @@ help)
   exit 0
   ;;
 edit)
+  if [ -z "$EDITOR" ]; then
+    EDITOR=vim
+  fi
   $EDITOR "$NEOSTOW_FILE"
   ;;
 esac
