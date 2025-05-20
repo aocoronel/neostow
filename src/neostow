@@ -90,7 +90,10 @@ function main() {
       WGET=true
       dest_folder=$(awk -F '=' '{print $2}' <<<"$working_data")
       eval dest_folder="$dest_folder"
-      create_links "$source_file" "$dest_folder"
+      if ! create_links "$source_file" "$dest_folder"; then
+        echo "Error: Failed to create link for $source_file" >&2
+        continue
+      fi
       ;;
     *)
       source_file="$DIR/$source_file"
@@ -99,7 +102,10 @@ function main() {
       if [[ "$val" -eq 0 ]]; then
         dest_folder=$(awk -F '=' '{print $2}' <<<"$working_data")
         eval dest_folder="$dest_folder"
-        create_links "$source_file" "$dest_folder"
+        if ! create_links "$source_file" "$dest_folder"; then
+          echo "Error: Failed to create link for $source_file" >&2
+          continue
+        fi
       else
         if [ -n "$VERBOSE" ]; then
           echo "File or directory $source_file does not exist. Skipping..."
