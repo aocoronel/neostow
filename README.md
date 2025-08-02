@@ -84,7 +84,7 @@ The `.config` directory will be added as: `/home/username/.config/alacritty/`
 > Currently files from the web are not added as symlinks.
 
 ```
-https://raw.githubusercontent.com/janpstrunn/neostow/refs/heads/main/README.md=$HOME/.cache/
+https://raw.githubusercontent.com/anstrinn/neostow/refs/heads/main/README.md=$HOME/.cache/
 ```
 
 The `README.md` file will be added as: `/home/username/.cache/README.md`
