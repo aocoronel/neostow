@@ -77,14 +77,7 @@ readConfig() {
   DEST_FOLDER=$(awk -F '=' '{print $2}' <<<"$working_data")
   eval DEST_FOLDER="$DEST_FOLDER"
 
-  mkdir -p "$DEST_FOLDER"
-
-  [ ! -f "$DEST_FOLDER" ] && [ ! -d "$DEST_FOLDER" ] && {
-    if [ -n "$VERBOSE" ]; then
-      echo "Destination file or directory $DEST_FOLDER does not exist. Skipping..."
-      exit 1
-    fi
-  }
+  [[ "$DEST_FOLDER" = */ ]] && mkdir -p "$DEST_FOLDER"
 
   if ! createLinks; then
     echo "ERROR: Failed to create link for $SOURCE_FILE" >&2
@@ -102,7 +95,7 @@ main() {
       jobs_running=$(jobs -p | wc -l)
     done
 
-    if echo "$working_data" | grep "#" &>/dev/null; then
+    if echo "$line" | grep "#" &>/dev/null; then
       continue
     fi
 
