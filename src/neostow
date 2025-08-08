@@ -46,7 +46,8 @@ createLinks() {
     ;;
   delete)
     message="Deleted symlink"
-    rm -r "${DEST_FOLDER/$file/}"
+    [ "$DEST_FOLDER/$file" = "/" ] && exit 1
+    rm "$DEST_FOLDER/$file"
     ;;
   *)
     message="Created symlink"
