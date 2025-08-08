@@ -1,146 +1,143 @@
 #!/usr/bin/env bash
 
 NEOSTOW_FILE="$PWD/.neostow"
-DIR=$PWD
+DIR=$(dirname "$NEOSTOW_FILE")
 
-function help() {
+BLUE="$(tput setaf 87)"
+
+help() {
   cat <<EOF
 Neostow
-Usage: neostow [flag] [command]
-Available flags:
--d                       - Remove all symlinks
--h                       - Displays this message and exits
--r                       - Overwrite symlinks
--s                       - Skip Wget Download
--t <absolute_path>       - Target a different project directory
--v                       - Enable verbose
-Available commands:
-edit                   - Edit the .neostow file
-help                   - Displays this message and exits
+
+Usage: neostow [OPTION] [COMMAND]
+
+Options:
+  -d                   Remove all symlinks
+  -h, --help           Displays this message and exits
+  -p [PARALLEL]        Set parallels
+  -r                   Overwrite symlinks
+  -t [ABSOLUTE_PATH]   Target a different project directory
+  -v                   Enable verbose
+
+Commands:
+  edit         Edit the .neostow file
 EOF
 }
 
-function verbose() {
-  if [ "$WGET" = "true" ]; then
-    if [ $val -eq 0 ]; then
-      message="Downloaded"
-    else
-      message="Failed to download"
-    fi
-    if [ -n "$DELETE" ]; then
-      message="Deleted"
-    fi
-    echo "$message: $raw_source"
-    return
-  fi
-  echo "$message: $dest_folder/$file"
+text() {
+  color=$1
+  text=$2
+  reset=$(tput sgr0)
+  printf "%s%s%s\n" "${color}" "${text}" "${reset}"
 }
 
-function create_links() {
-  local source_file dest_folder file message wget_arg
-  source_file="$1"
-  dest_folder=$2
-  file=$(basename "$source_file")
+verbose() {
+  text "$BLUE" "$message: $DEST_FOLDER/$file"
+}
+
+createLinks() {
+  file=$(basename "$SOURCE_FILE")
   message="Created symlink"
-  if [[ "$WGET" = "true" ]]; then
-    if [ -n "$DELETE" ]; then
-      rm "$dest_folder/$file"
-    else
-      if [ -n "$VERBOSE" ]; then
-        wget_arg=-v
-      else
-        wget_arg="--no-verbose"
-      fi
-      wget "$wget_arg" -O "$dest_folder/$file" "$source_file"
-      val="$?"
-    fi
+
+  case "$MODE" in
+  overwrite)
+    message="Created symlink"
+    ln -sf "$SOURCE_FILE" "$DEST_FOLDER"
+    ;;
+  delete)
+    message="Deleted symlink"
+    rm -r "${DEST_FOLDER/$file/}"
+    ;;
+  *)
+    message="Created symlink"
+    ln -s "$SOURCE_FILE" "$DEST_FOLDER"
+    ;;
+  esac
+
+  val=$?
+  [ "$val" -eq 0 ] && {
+    [ -n "$VERBOSE" ] && verbose
+  }
+}
+
+readConfig() {
+  working_data=$1
+
+  SOURCE_FILE="$(awk -F '=' '{print $1}' <<<"$working_data")"
+  eval SOURCE_FILE="$DIR/$SOURCE_FILE"
+
+  [ ! -f "$SOURCE_FILE" ] && [ ! -d "$SOURCE_FILE" ] && {
     if [ -n "$VERBOSE" ]; then
-      verbose
-      unset val
+      echo "Source file or directory $SOURCE_FILE does not exist. Skipping..."
+      exit 1
     fi
-  else
-    if [ -n "$OVERWRITE" ]; then
-      ln -sf "$source_file" "$dest_folder"
-    elif [ -n "$DELETE" ]; then
-      message="Deleted symlink"
-      rm "$dest_folder/$file"
-    else
-      ln -s "$source_file" "$dest_folder"
-    fi
+  }
+
+  DEST_FOLDER=$(awk -F '=' '{print $2}' <<<"$working_data")
+  eval DEST_FOLDER="$DEST_FOLDER"
+
+  mkdir -p "$DEST_FOLDER"
+
+  [ ! -f "$DEST_FOLDER" ] && [ ! -d "$DEST_FOLDER" ] && {
     if [ -n "$VERBOSE" ]; then
-      verbose
+      echo "Destination file or directory $DEST_FOLDER does not exist. Skipping..."
+      exit 1
     fi
+  }
+
+  if ! createLinks; then
+    echo "ERROR: Failed to create link for $SOURCE_FILE" >&2
   fi
 }
 
-function main() {
-  if [[ ! -f "$NEOSTOW_FILE" ]]; then
-    echo "Error: $NEOSTOW_FILE not found"
-    exit 1
-  fi
-  local source_file dest_folder working_data
-  while IFS= read -r working_data; do
-    source_file="$(awk -F '=' '{print $1}' <<<"$working_data")"
-    raw_source="$source_file"
-    case "$source_file" in
-    https://*)
-      if [ -n "$SKIP" ]; then
-        continue
-      fi
-      WGET=true
-      dest_folder=$(awk -F '=' '{print $2}' <<<"$working_data")
-      eval dest_folder="$dest_folder"
-      if ! create_links "$source_file" "$dest_folder"; then
-        echo "Error: Failed to create link for $source_file" >&2
-        continue
-      fi
-      ;;
-    *)
-      source_file="$DIR/$source_file"
-      source_file="$(find $source_file | head -n 1)"
-      val=$?
-      if [[ "$val" -eq 0 ]]; then
-        dest_folder=$(awk -F '=' '{print $2}' <<<"$working_data")
-        eval dest_folder="$dest_folder"
-        if ! create_links "$source_file" "$dest_folder"; then
-          echo "Error: Failed to create link for $source_file" >&2
-          continue
-        fi
-      else
-        if [ -n "$VERBOSE" ]; then
-          echo "File or directory $source_file does not exist. Skipping..."
-        fi
-        continue
-      fi
-      ;;
-    esac
-  done <"$NEOSTOW_FILE"
+main() {
+  parallels=${parallels:-20}
+
+  cat "$NEOSTOW_FILE" | while IFS= read -r line; do
+    jobs_running=$(jobs -p | wc -l)
+
+    while [ "$jobs_running" -ge "$parallels" ]; do
+      wait -n
+      jobs_running=$(jobs -p | wc -l)
+    done
+
+    if echo "$working_data" | grep "#" &>/dev/null; then
+      continue
+    fi
+
+    readConfig "$line" &
+  done
+
+  wait
 }
 
-while getopts ":hdrt:vs" opt; do
+while getopts ":h-drt:vp:" opt; do
   case "$opt" in
   r)
-    OVERWRITE=true
+    MODE=overwrite
     ;;
   d)
-    DELETE=true
+    MODE=delete
     ;;
   h)
     help
     exit 0
     ;;
+  p)
+    parallels=$OPTARG
+    ;;
+  -)
+    break
+    ;;
   t)
-    DIR="$OPTARG"
-    NEOSTOW_FILE="$OPTARG/.neostow"
+    NEOSTOW_FILE="$OPTARG"
+    DIR=$(dirname "$NEOSTOW_FILE")
     ;;
   v)
     VERBOSE=true
     ;;
-  s)
-    SKIP=true
-    ;;
   ?)
-    echo "Error: Invalid option '-$OPTARG'" >&2
+    echo "ERROR: Invalid option '-$OPTARG'" >&2
     exit 1
     ;;
   esac
@@ -149,7 +146,7 @@ done
 shift $((OPTIND - 1))
 
 case "$1" in
-help)
+--help)
   help
   exit 0
   ;;
@@ -158,7 +155,13 @@ edit)
     EDITOR=vim
   fi
   $EDITOR "$NEOSTOW_FILE"
+  exit 0
   ;;
 esac
+
+[ ! -f "$NEOSTOW_FILE" ] && {
+  echo "ERROR: $NEOSTOW_FILE not found"
+  exit 1
+}
 
 main
