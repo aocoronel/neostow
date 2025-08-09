@@ -16,7 +16,7 @@ Options:
   -h, --help           Displays this message and exits
   -p [PARALLEL]        Set parallels
   -r                   Overwrite symlinks
-  -t [ABSOLUTE_PATH]   Target a different project directory
+  -c [ABSOLUTE_PATH]   Use different configuration file
   -v                   Enable verbose
 
 Commands:
