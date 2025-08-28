@@ -1,8 +1,8 @@
 # Neostow
 
-Neostow is a shell script project that aims to reinvent the wheel... Rewrite the functionality of GNU Stow. It allows for more flexible symlink management, enabling the creation of symlinks from anywhere to anywhere on your computer. Unlike GNU Stow, Neostow does not rely on a 'package' structure, providing more freedom in managing your symlinks through a configuration file.
+`neostow` is a tool that streamline the process to manage symlinks like GNU stow, but using a configuration file. It allows for more flexible symlink management, enabling the creation of symlinks from anywhere to anywhere on your computer.
 
-The declarative nature of Neostow allows to easily make reproducible and granular symlinking, unlike GNU Stow. However, this project does not aims to fully replace GNU Stow, but to give a declarative feature missing from it.
+This declarative nature allows to easily make reproducible and granular symlinking, unlike GNU Stow. However, this project does not aims to fully replace GNU Stow, but to give a declarative feature missing from it.
 
 ## Features
 
@@ -10,46 +10,41 @@ The declarative nature of Neostow allows to easily make reproducible and granula
 - **Per-Project Configuration**: Maintain a `.neostow` configuration file per project.
 - **Overwrite Symlinks**: Optionally overwrite existing symlinks.
 - **Remove Symlinks**: Easily remove all created symlinks.
-- **Get files from the web**: Configure links to files in the web to be automatically downloaded to the right location (WIP).
 
 ## Installation
 
 ```bash
-# 1. Clone the Repository
-git clone https://github.com/yourusername/neostow.git
-cd neostow
-# 2. Make the Script Executable
-chmod +x neostow
-# 3. Move the Script to a Directory in Your PATH
-mv neostow $HOME/.local/bin
-# OR
-# sudo mv neostow /usr/local/bin/
+git clone https://github.com/anstrinn/neostow.git
+chmod +x neostow/src/neostow
+sudo cp neostow/src/neostow /usr/local/bin/
 ```
 
 ## Usage
 
-Neostow reads from a `.neostow` file in the current directory to determine which symlinks to create. The `.neostow` file should contain lines in the format `source=destination`.
+`neostow` reads from a `.neostow` file in the current directory to determine which symlinks to create. The `.neostow` file should contain lines in the following format: `source=destination`.
 
-### Commands
+See the manpage for more details.
 
 ```
 Neostow
-Usage: neostow [flag] [command]
-Available flags:
--d                       - Remove all symlinks
--h                       - Displays this message and exits
--r                       - Overwrite symlinks
--s                       - Skip Wget Download
--t <absolute_path>       - Target a different project directory
--v                       - Enable verbose
-Available commands:
-edit                   - Edit the .neostow file
-help                   - Displays this message and exits
+
+Usage: neostow [OPTION] [COMMAND]
+
+Options:
+  -d                   Remove all symlinks
+  -h, --help           Displays this message and exits
+  -p [PARALLEL]        Set parallels
+  -r                   Overwrite symlinks
+  -c [ABSOLUTE_PATH]   Use different configuration file
+  -v                   Enable verbose
+
+Commands:
+  edit         Edit the .neostow file
 ```
 
 ### Configuration File
 
-The `.neostow` file should be placed in the root of your project directory. Each line in the file should specify a symlink in the format `source=destination`.
+The `.neostow` file should be placed in the root of your project directory.
 
 #### Examples
 
@@ -60,35 +55,6 @@ config/myconfig=/home/username/.config/myconfig/
 scripts/myscript.sh=/home/username/bin/myscript/
 ```
 
-##### Declaring Files
-
-```
-forg.conf=$HOME/.local/share/
-```
-
-The `forg.conf` file will be added as: `/home/username/.local/share/forg.conf`
-
-##### Declaring Folders
-
-```
-.local/bin/=$HOME/.local/
-.config/alacritty/=$HOME/.config/
-```
-
-The `.local` directory will be added as: `/home/username/.local/bin/`
-The `.config` directory will be added as: `/home/username/.config/alacritty/`
-
-##### Declaring Links
-
-> [!NOTE]
-> Currently files from the web are not added as symlinks.
-
-```
-https://raw.githubusercontent.com/anstrinn/neostow/refs/heads/main/README.md=$HOME/.cache/
-```
-
-The `README.md` file will be added as: `/home/username/.cache/README.md`
-
 ## Integrations
 
 ### [Just](https://github.com/casey/just)
@@ -98,9 +64,9 @@ The `README.md` file will be added as: `/home/username/.cache/README.md`
 In or `justfile`, you may create a recipe like this:
 
 ```just
-# Neostow: Skip wget, verbose and overwrite
+# Neostow: Verbose and overwrite
 neostow:
-  neostow -s -v -r
+  neostow -v -r
 ```
 
 Then, from any child directory where this `justfile` was placed, you can just run `just neostow`, and it will run the configured recipe.
