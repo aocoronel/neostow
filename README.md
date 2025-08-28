@@ -1,8 +1,10 @@
-# Neostow
+# The declarative GNU Stow
 
 `neostow` is a tool that streamline the process to manage symlinks like GNU stow, but using a configuration file. It allows for more flexible symlink management, enabling the creation of symlinks from anywhere to anywhere on your computer.
 
 This declarative nature allows to easily make reproducible and granular symlinking, unlike GNU Stow. However, this project does not aims to fully replace GNU Stow, but to give a declarative feature missing from it.
+
+You can also look for a version of this script written in Nim at [neostow-nim](https://github.com/aocoronel/neostow-nim).
 
 ## Features
 
