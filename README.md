@@ -16,7 +16,7 @@ You can also look for a version of this script written in Nim at [neostow-nim](h
 ## Installation
 
 ```bash
-git clone https://github.com/anstrinn/neostow.git
+git clone https://github.com/aocoronel/neostow.git
 chmod +x neostow/src/neostow
 sudo cp neostow/src/neostow /usr/local/bin/
 ```
