@@ -18,6 +18,8 @@ Other versions of Neostow:
 
 This project is the fourth on the `neostow` rewrites series, mainly for Rust learning purposes. The original `neostow` is the POSIX shell version.
 
+This project does not rely on any external crates.
+
 ### Bugs
 
 Currently, there is no known bug.
