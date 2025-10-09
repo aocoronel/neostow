@@ -1,6 +1,7 @@
 use std::env;
+use std::fmt;
 use std::fs;
-use std::io::{self, BufRead};
+use std::io::{self, BufRead, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, exit};
 
@@ -23,6 +24,43 @@ struct Config {
     verbose: bool,
     force: bool,
     dry: bool,
+    debug: bool,
+}
+
+const COLOR_RED: &str = "\x1b[91m";
+const COLOR_YELLOW: &str = "\x1b[33m";
+const COLOR_GREEN: &str = "\x1b[38;5;47m";
+const COLOR_BLUE: &str = "\x1b[38;5;75m";
+const COLOR_RESET: &str = "\x1b[0m";
+
+#[derive(Debug)]
+enum LogLevel {
+    Fatal,
+    Error,
+    Warn,
+    Info,
+    Debug,
+}
+
+fn printfc_func(level: LogLevel, fmt: fmt::Arguments) -> io::Result<()> {
+    let (color, label, mut out): (&str, &str, Box<dyn Write>) = match level {
+        LogLevel::Fatal => (COLOR_RED, "FATAL", Box::new(io::stderr())),
+        LogLevel::Error => (COLOR_RED, "ERROR", Box::new(io::stderr())),
+        LogLevel::Warn => (COLOR_YELLOW, "WARNING", Box::new(io::stdout())),
+        LogLevel::Info => (COLOR_GREEN, "INFO", Box::new(io::stdout())),
+        LogLevel::Debug => (COLOR_BLUE, "DEBUG", Box::new(io::stdout())),
+    };
+
+    write!(out, "{}[{}]:{} ", color, label, COLOR_RESET)?;
+    write!(out, "{}\n", fmt)?;
+    out.flush()?;
+    Ok(())
+}
+
+macro_rules! printfc {
+    ($level:expr, $($arg:tt)*) => {
+        printfc_func($level, format_args!($($arg)*)).unwrap();
+    };
 }
 
 fn help() {
@@ -56,12 +94,6 @@ Options:
     );
 }
 
-fn print_verbose(msg: &str) {
-    let blue = "\x1b[94m";
-    let reset = "\x1b[0m";
-    println!("{blue}{msg}{reset}");
-}
-
 fn create_symlink(src: &Path, dest: &Path, is_dir: bool, cfg: &Config) -> io::Result<bool> {
     if dest == Path::new("/") {
         return Err(io::Error::new(
@@ -79,9 +111,6 @@ fn create_symlink(src: &Path, dest: &Path, is_dir: bool, cfg: &Config) -> io::Re
                     "Destination '{}' exists and is not a symlink. Overwrite?",
                     dest.display()
                 ))? {
-                    if cfg.verbose {
-                        eprintln!("Skipped: {}", dest.display());
-                    }
                     return Ok(false);
                 }
             }
@@ -91,20 +120,22 @@ fn create_symlink(src: &Path, dest: &Path, is_dir: bool, cfg: &Config) -> io::Re
     match cfg.mode {
         Mode::Delete => {
             if cfg.dry {
-                println!("Would remove {}", dest.display());
+                printfc!(LogLevel::Info, "Would remove {}", dest.display());
                 return Ok(false);
             }
             if dest.exists() {
+                not_root(&dest)?;
                 fs::remove_file(dest)?;
             }
         }
         Mode::Overwrite => {
             if cfg.dry {
-                println!("Would remove {}", dest.display());
+                printfc!(LogLevel::Info, "Would remove {}", dest.display());
                 println!("{} → {}", src.display(), dest.display());
                 return Ok(false);
             }
             if dest.exists() {
+                not_root(&dest)?;
                 fs::remove_file(dest)?;
             }
             #[cfg(unix)]
@@ -137,6 +168,16 @@ fn create_symlink(src: &Path, dest: &Path, is_dir: bool, cfg: &Config) -> io::Re
     }
 
     Ok(true)
+}
+
+fn not_root(dst: &Path) -> io::Result<()> {
+    if dst == Path::new("/") {
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            "Refusing to delete root",
+        ));
+    }
+    Ok(())
 }
 
 fn expand_path(raw: &str) -> PathBuf {
@@ -175,11 +216,20 @@ fn process_line(line: &str, cfg: &Config, operations: &mut i32) -> io::Result<()
     }
 
     let src = cfg.basedir.join(parts[0]);
+
+    if cfg.debug {
+        printfc!(LogLevel::Debug, "Source file: {}", src.display());
+    }
+
     let dest_base = expand_path(parts[1]);
+
+    if cfg.debug {
+        printfc!(LogLevel::Debug, "Destination: {}", dest_base.display());
+    }
 
     if !src.exists() {
         if cfg.verbose {
-            eprintln!("Source not found: {:?}", src);
+            printfc!(LogLevel::Error, "Source {:?} not found", src);
         }
         return Ok(());
     }
@@ -204,11 +254,10 @@ fn process_line(line: &str, cfg: &Config, operations: &mut i32) -> io::Result<()
                 Mode::Overwrite => "Overwritten symlink",
                 Mode::Delete => "Deleted symlink",
             };
-            print_verbose(&format!(
-                "{mode_str}: {} → {}",
-                dest.display(),
-                src.display()
-            ));
+            println!(
+                "{}",
+                &format!("{mode_str}: {} → {}", dest.display(), src.display())
+            );
         }
     }
 
@@ -223,7 +272,7 @@ fn run(cfg: Config, operations: &mut i32) -> io::Result<()> {
     for line in reader.lines() {
         linenum += 1;
         if let Err(err) = process_line(&line?, &cfg, operations) {
-            eprintln!("{}:{}: {err}", cfg.file.display(), linenum);
+            printfc!(LogLevel::Error, "{}:{}: {err}", cfg.file.display(), linenum);
         }
     }
 
@@ -262,7 +311,7 @@ fn run_diff(src: &Path, dest: &Path, is_dir: bool) -> io::Result<bool> {
 }
 
 fn version() {
-    println!("0.1.0");
+    println!("1.0.0");
 }
 
 fn main() -> io::Result<()> {
@@ -274,6 +323,7 @@ fn main() -> io::Result<()> {
         verbose: false,
         force: false,
         dry: false,
+        debug: false,
     };
     let mut operations: i32 = 0;
     while let Some(arg) = args.next() {
@@ -285,6 +335,7 @@ fn main() -> io::Result<()> {
                 version();
                 return Ok(());
             }
+            "-D" | "--debug" => cfg.debug = true,
             "-d" | "--dry" => cfg.dry = true,
             "-F" | "--force" => {
                 cfg.force = true;
@@ -307,14 +358,14 @@ fn main() -> io::Result<()> {
                 return edit_file(&cfg.file);
             }
             _ => {
-                eprintln!("Unknown argument: {arg}");
+                printfc!(LogLevel::Fatal, "Unknown argument: {arg}");
                 exit(1);
             }
         }
     }
 
     if !cfg.file.exists() {
-        eprintln!("ERROR: {:?} not found", cfg.file);
+        printfc!(LogLevel::Fatal, "{:?} not found", cfg.file);
         exit(1);
     }
 
