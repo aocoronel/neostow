@@ -14,7 +14,7 @@ Other versions of Neostow:
 - [aocoronel/neostow-nim](https://github.com/aocoronel/neostow-nim): No longer maintained.
 - [aocoronel/neostow-sh](https://github.com/aocoronel/neostow-sh)
 
-## C Edition
+## Rust Edition
 
 This project is the fourth on the `neostow` rewrites series, mainly for Rust learning purposes. The original `neostow` is the POSIX shell version.
 
