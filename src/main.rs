@@ -95,13 +95,6 @@ Options:
 }
 
 fn create_symlink(src: &Path, dest: &Path, is_dir: bool, cfg: &Config) -> io::Result<bool> {
-    if dest == Path::new("/") {
-        return Err(io::Error::new(
-            io::ErrorKind::Other,
-            "Refusing to affect root (/)",
-        ));
-    }
-
     if dest.exists() && !dest.symlink_metadata()?.file_type().is_symlink() {
         if let Mode::Overwrite = cfg.mode {
             let do_prompt = run_diff(src, dest, is_dir)?;
@@ -124,8 +117,11 @@ fn create_symlink(src: &Path, dest: &Path, is_dir: bool, cfg: &Config) -> io::Re
                 return Ok(false);
             }
             if dest.exists() {
-                not_root(&dest)?;
-                fs::remove_file(dest)?;
+                if dest.is_dir() {
+                    fs::remove_dir_all(dest)?;
+                } else {
+                    fs::remove_file(dest)?;
+                }
             }
         }
         Mode::Overwrite => {
@@ -135,8 +131,11 @@ fn create_symlink(src: &Path, dest: &Path, is_dir: bool, cfg: &Config) -> io::Re
                 return Ok(false);
             }
             if dest.exists() {
-                not_root(&dest)?;
-                fs::remove_file(dest)?;
+                if dest.is_dir() {
+                    fs::remove_dir_all(dest)?;
+                } else {
+                    fs::remove_file(dest)?;
+                }
             }
             #[cfg(unix)]
             symlink(src, dest)?;
@@ -168,16 +167,6 @@ fn create_symlink(src: &Path, dest: &Path, is_dir: bool, cfg: &Config) -> io::Re
     }
 
     Ok(true)
-}
-
-fn not_root(dst: &Path) -> io::Result<()> {
-    if dst == Path::new("/") {
-        return Err(io::Error::new(
-            io::ErrorKind::Other,
-            "Refusing to delete root",
-        ));
-    }
-    Ok(())
 }
 
 fn expand_path(raw: &str) -> PathBuf {
@@ -244,7 +233,7 @@ fn process_line(line: &str, cfg: &Config, operations: &mut i32) -> io::Result<()
         }
     }
 
-    let success = create_symlink(&src, &dest, is_dir, cfg)?;
+    let success = create_symlink(&src, &dest, is_dir, &cfg)?;
 
     if success {
         *operations += 1;
@@ -264,7 +253,7 @@ fn process_line(line: &str, cfg: &Config, operations: &mut i32) -> io::Result<()
     Ok(())
 }
 
-fn run(cfg: Config, operations: &mut i32) -> io::Result<()> {
+fn run(cfg: &Config, operations: &mut i32) -> io::Result<()> {
     let file = fs::File::open(&cfg.file)?;
     let reader = io::BufReader::new(file);
     let mut linenum = 0;
@@ -369,7 +358,8 @@ fn main() -> io::Result<()> {
         exit(1);
     }
 
-    let result = run(cfg, &mut operations);
+    let cfg = cfg;
+    let result = run(&cfg, &mut operations);
     println!("{} operations were performed.", operations);
     result
 }
