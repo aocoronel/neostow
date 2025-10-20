@@ -195,32 +195,27 @@ fn process_line(line: &str, cfg: &Config, operations: &mut i32) -> io::Result<()
         }
     }
 
-    if line.is_empty() {
-        return Ok(());
-    }
-
-    let parts: Vec<&str> = line.splitn(2, '=').map(str::trim).collect();
-    if parts.len() != 2 {
-        return Ok(());
-    }
-
-    let src = cfg.basedir.join(parts[0]);
-
-    if cfg.debug {
-        printfc!(LogLevel::Debug, "Source file: {}", src.display());
-    }
-
-    let dest_base = expand_path(parts[1]);
-
-    if cfg.debug {
-        printfc!(LogLevel::Debug, "Destination: {}", dest_base.display());
-    }
+    let (src, dest_base) = if let Some(eq_pos) = line.find('=') {
+        let parts: Vec<&str> = line.splitn(2, '=').map(str::trim).collect();
+        (cfg.basedir.join(parts[0]), expand_path(parts[1]))
+    } else {
+        let src_path = cfg.basedir.join(line);
+        let src_dir = Path::new(line).parent().unwrap_or_else(|| Path::new(""));
+        let parent_dir = cfg.basedir.parent().unwrap_or(&cfg.basedir);
+        let dest_base = parent_dir.join(src_dir); // join parent's dir with src dir
+        (src_path, dest_base)
+    };
 
     if !src.exists() {
         if cfg.verbose {
             printfc!(LogLevel::Error, "Source {:?} not found", src);
         }
         return Ok(());
+    }
+
+    if cfg.debug {
+        printfc!(LogLevel::Debug, "Source file: {}", src.display());
+        printfc!(LogLevel::Debug, "Destination: {}", dest_base.display());
     }
 
     let is_dir = src.is_dir();
@@ -245,7 +240,7 @@ fn process_line(line: &str, cfg: &Config, operations: &mut i32) -> io::Result<()
             };
             println!(
                 "{}",
-                &format!("{mode_str}: {} → {}", dest.display(), src.display())
+                &format!("{mode_str}: {} => {}", src.display(), dest.display())
             );
         }
     }
