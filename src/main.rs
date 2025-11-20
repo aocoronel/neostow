@@ -1,9 +1,12 @@
 use std::env;
-use std::fmt;
 use std::fs;
-use std::io::{self, BufRead, Write};
+use std::io::{self, BufRead};
 use std::path::{Path, PathBuf};
 use std::process::{Command, exit};
+
+#[macro_use]
+mod printfc;
+use crate::printfc::*;
 
 #[cfg(unix)]
 use std::os::unix::fs::symlink;
@@ -25,42 +28,6 @@ struct Config {
     force: bool,
     dry: bool,
     debug: bool,
-}
-
-const COLOR_RED: &str = "\x1b[91m";
-// const COLOR_YELLOW: &str = "\x1b[33m";
-const COLOR_GREEN: &str = "\x1b[38;5;47m";
-const COLOR_BLUE: &str = "\x1b[38;5;75m";
-const COLOR_RESET: &str = "\x1b[0m";
-
-#[derive(Debug)]
-enum LogLevel {
-    Fatal,
-    Error,
-    // Warn,
-    Info,
-    Debug,
-}
-
-fn printfc_func(level: LogLevel, fmt: fmt::Arguments) -> io::Result<()> {
-    let (color, label, mut out): (&str, &str, Box<dyn Write>) = match level {
-        LogLevel::Fatal => (COLOR_RED, "FATAL", Box::new(io::stderr())),
-        LogLevel::Error => (COLOR_RED, "ERROR", Box::new(io::stderr())),
-        // LogLevel::Warn => (COLOR_YELLOW, "WARNING", Box::new(io::stdout())),
-        LogLevel::Info => (COLOR_GREEN, "INFO", Box::new(io::stdout())),
-        LogLevel::Debug => (COLOR_BLUE, "DEBUG", Box::new(io::stdout())),
-    };
-
-    write!(out, "{}[{}]:{} ", color, label, COLOR_RESET)?;
-    write!(out, "{}\n", fmt)?;
-    out.flush()?;
-    Ok(())
-}
-
-macro_rules! printfc {
-    ($level:expr, $($arg:tt)*) => {
-        printfc_func($level, format_args!($($arg)*)).unwrap();
-    };
 }
 
 fn help() {
@@ -195,7 +162,7 @@ fn process_line(line: &str, cfg: &Config, operations: &mut i32) -> io::Result<()
         }
     }
 
-    let (src, dest_base) = if let Some(eq_pos) = line.find('=') {
+    let (src, dest_base) = if let Some(_) = line.find('=') {
         let parts: Vec<&str> = line.splitn(2, '=').map(str::trim).collect();
         (cfg.basedir.join(parts[0]), expand_path(parts[1]))
     } else {
