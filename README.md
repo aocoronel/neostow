@@ -8,11 +8,12 @@ This tool is useful to keep files and directories organized in a single centrali
 
 With `neostow` each file or directory can be symlinked to a specific part of the system, and not the project as a whole. There is not ignore file, and no need to adjust the folder layout to achieve your goals. If your `neostow` does not explicitly specify an operation, it won't touch a single file.
 
-Other versions of Neostow:
+Other versions of Neostow. However, these are no longer maintained.
 
-- [aocoronel/neostow-c](https://github.com/aocoronel/neostow-c)
-- [aocoronel/neostow-nim](https://github.com/aocoronel/neostow-nim): No longer maintained.
 - [aocoronel/neostow-sh](https://github.com/aocoronel/neostow-sh)
+- [aocoronel/neostow-nim](https://github.com/aocoronel/neostow-nim)
+
+Use the C edition instead: [aocoronel/neostow-c](https://codeberg.org/aocoronel/neostow-c)
 
 ## Rust Edition
 
