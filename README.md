@@ -8,27 +8,6 @@ This tool is useful to keep files and directories organized in a single centrali
 
 With `neostow` each file or directory can be symlinked to a specific part of the system, and not the project as a whole. There is not ignore file, and no need to adjust the folder layout to achieve your goals. If your `neostow` does not explicitly specify an operation, it won't touch a single file.
 
-Other versions of Neostow. However, these are no longer maintained.
-
-- [aocoronel/neostow-sh](https://github.com/aocoronel/neostow-sh)
-- [aocoronel/neostow-nim](https://github.com/aocoronel/neostow-nim)
-
-Use the C edition instead: [aocoronel/neostow-c](https://codeberg.org/aocoronel/neostow-c)
-
-## Rust Edition
-
-This project is the fourth on the `neostow` rewrites series, mainly for Rust learning purposes. The original `neostow` is the POSIX shell version.
-
-This project does not rely on any external crates.
-
-### Bugs
-
-Currently, there is no known bug.
-
-### Vulnerabilities
-
-Currently, there is no known vulnerabilities.
-
 ## Features
 
 - **Flexible symlink creation**: Create symlinks from any relative source to any destination.
@@ -36,37 +15,6 @@ Currently, there is no known vulnerabilities.
 - **Overwrite symlinks**: Optionally overwrite existing symlinks.
 - **Remove symlinks**: Easily remove all created symlinks.
 - **Preview operations**: Preview what operations would run.
-
-## Installation
-
-Copy the source:
-
-```bash
-git clone https://github.com/aocoronel/neostow-rs.git
-cd neostow-rs
-```
-
-To install `neostow`:
-
-```bash
-cargo build --release
-sudo cp target/release/neostow-rs /usr/local/bin/neostow
-```
-
-To install manpages:
-
-```bash
-sudo cp docs/neostow.1 /usr/share/man/man1/
-```
-
-To install completions:
-
-```bash
-# Bash
-sudo cp completions/_neostow.bash /usr/share/bash-completion/completions/
-# Zsh
-sudo cp completions/_neostow.zsh /usr/share/zsh/site-functions
-```
 
 ## Usage
 
