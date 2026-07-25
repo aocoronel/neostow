@@ -1,27 +1,33 @@
 #!/usr/bin/env bash
-_SHELL() {
-  echo -e 'bash\nzsh'
-}
+
+# This file was manually written
+
 _FILE() {
   ls
 }
+
+_complete() {
+  mapfile -t COMPREPLY < <(compgen -W "$@" -- "${cur}")
+  return 0
+}
+
 _neostow() {
-  COMPREPLY=()
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD - 1]}"
   case "${cur}" in
   -*)
-    mapfile -t COMPREPLY < <(compgen -W " --file -f --debug -D --dry -d --overwrite -o --help -h --force -F --verbose -V --version -v" -- "${cur}")
+    _complete " --file -f --debug -D --dry -d --overwrite -o --help -h --force -F --verbose -V --version -v"
     return 0
     ;;
   esac
   case "${prev}" in
   -f | --file)
-    mapfile -t COMPREPLY < <(compgen -W "$(_FILE)" -- "${cur}")
+    _complete "$(_FILE)"
     return 0
     ;;
   esac
-  mapfile -t COMPREPLY < <(compgen -W "edit delete" -- "${cur}")
+  _complete "edit delete"
   return 0
 }
+
 complete -F _neostow neostow
