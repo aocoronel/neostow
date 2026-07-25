@@ -1,11 +1,13 @@
-use std::fmt;
-use std::io::{self, Write};
+use std::{
+    fmt,
+    io::{self, Write},
+};
 
-const COLOR_RED: &str = "\x1b[91m";
-const COLOR_YELLOW: &str = "\x1b[33m";
-const COLOR_GREEN: &str = "\x1b[38;5;47m";
-const COLOR_BLUE: &str = "\x1b[38;5;75m";
-const COLOR_RESET: &str = "\x1b[0m";
+static COLOR_RED: &str = "\x1b[91m";
+static COLOR_YELLOW: &str = "\x1b[33m";
+static COLOR_GREEN: &str = "\x1b[38;5;47m";
+static COLOR_BLUE: &str = "\x1b[38;5;75m";
+static COLOR_RESET: &str = "\x1b[0m";
 
 #[derive(Debug)]
 pub enum LogLevel {
@@ -31,8 +33,37 @@ pub fn printfc_func(level: LogLevel, fmt: fmt::Arguments) -> io::Result<()> {
     Ok(())
 }
 
-#[macro_export] macro_rules! printfc {
-    ($level:expr, $($arg:tt)*) => {
-        printfc_func($level, format_args!($($arg)*)).unwrap();
+#[macro_export]
+macro_rules! fatalf {
+    ($($arg:tt)*) => {
+        printfc_func(LogLevel::Fatal, format_args!($($arg)*)).unwrap();
+    };
+}
+
+#[macro_export]
+macro_rules! warnf {
+    ($($arg:tt)*) => {
+        printfc_func(LogLevel::Warn, format_args!($($arg)*)).unwrap();
+    };
+}
+
+#[macro_export]
+macro_rules! infof {
+    ($($arg:tt)*) => {
+        printfc_func(LogLevel::Info, format_args!($($arg)*)).unwrap();
+    };
+}
+
+#[macro_export]
+macro_rules! errorf {
+    ($($arg:tt)*) => {
+        printfc_func(LogLevel::Error, format_args!($($arg)*)).unwrap();
+    };
+}
+
+#[macro_export]
+macro_rules! debugf {
+    ($($arg:tt)*) => {
+        printfc_func(LogLevel::Debug, format_args!($($arg)*)).unwrap();
     };
 }

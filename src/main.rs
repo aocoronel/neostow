@@ -1,18 +1,14 @@
-use std::env;
-use std::fs;
-use std::io::{self, BufRead};
-use std::path::{Path, PathBuf};
-use std::process::{Command, exit};
+use std::{
+    env, fs,
+    io::{self, BufRead},
+    os::unix::fs::symlink,
+    path::{Path, PathBuf},
+    process::{Command, exit},
+};
 
 #[macro_use]
 mod printfc;
 use crate::printfc::*;
-
-#[cfg(unix)]
-use std::os::unix::fs::symlink;
-
-#[cfg(windows)]
-use std::os::windows::fs::{symlink_dir, symlink_file};
 
 enum Mode {
     Create,
@@ -80,7 +76,7 @@ fn create_symlink(src: &Path, dest: &Path, is_dir: bool, cfg: &Config) -> io::Re
     match cfg.mode {
         Mode::Delete => {
             if cfg.dry {
-                printfc!(LogLevel::Info, "Would remove {}", dest.display());
+                infof!("Would remove {}", dest.display());
                 return Ok(false);
             }
             if dest.exists() {
@@ -93,8 +89,8 @@ fn create_symlink(src: &Path, dest: &Path, is_dir: bool, cfg: &Config) -> io::Re
         }
         Mode::Overwrite => {
             if cfg.dry {
-                printfc!(LogLevel::Info, "Would remove {}", dest.display());
-                println!("{} → {}", src.display(), dest.display());
+                infof!("Would remove {}", dest.display());
+                println!("{} -> {}", src.display(), dest.display());
                 return Ok(false);
             }
             if dest.exists() {
@@ -104,32 +100,14 @@ fn create_symlink(src: &Path, dest: &Path, is_dir: bool, cfg: &Config) -> io::Re
                     fs::remove_file(dest)?;
                 }
             }
-            #[cfg(unix)]
             symlink(src, dest)?;
-            #[cfg(windows)]
-            {
-                if is_dir {
-                    symlink_dir(src, dest)?;
-                } else {
-                    symlink_file(src, dest)?;
-                }
-            }
         }
         Mode::Create => {
             if cfg.dry {
-                println!("{} → {}", src.display(), dest.display());
+                println!("{} -> {}", src.display(), dest.display());
                 return Ok(false);
             }
-            #[cfg(unix)]
             symlink(src, dest)?;
-            #[cfg(windows)]
-            {
-                if is_dir {
-                    symlink_dir(src, dest)?;
-                } else {
-                    symlink_file(src, dest)?;
-                }
-            }
         }
     }
 
@@ -175,14 +153,14 @@ fn process_line(line: &str, cfg: &Config, operations: &mut i32) -> io::Result<()
 
     if !src.exists() {
         if cfg.verbose {
-            printfc!(LogLevel::Error, "Source {:?} not found", src);
+            errorf!("Source {:?} not found", src);
         }
         return Ok(());
     }
 
     if cfg.debug {
-        printfc!(LogLevel::Debug, "Source file: {}", src.display());
-        printfc!(LogLevel::Debug, "Destination: {}", dest_base.display());
+        debugf!("Source file: {}", src.display());
+        debugf!("Destination: {}", dest_base.display());
     }
 
     let is_dir = src.is_dir();
@@ -223,7 +201,7 @@ fn run(cfg: &Config, operations: &mut i32) -> io::Result<()> {
     for line in reader.lines() {
         linenum += 1;
         if let Err(err) = process_line(&line?, &cfg, operations) {
-            printfc!(LogLevel::Error, "{}:{}: {err}", cfg.file.display(), linenum);
+            errorf!("{}:{}: {err}", cfg.file.display(), linenum);
         }
     }
 
@@ -262,11 +240,12 @@ fn run_diff(src: &Path, dest: &Path, is_dir: bool) -> io::Result<bool> {
 }
 
 fn version() {
-    println!("1.0.0");
+    println!("0.1.0");
 }
 
 fn main() -> io::Result<()> {
     let mut args = env::args().skip(1);
+
     let mut cfg = Config {
         file: env::current_dir()?.join(".neostow"),
         basedir: env::current_dir()?,
@@ -276,6 +255,7 @@ fn main() -> io::Result<()> {
         dry: false,
         debug: false,
     };
+
     let mut operations: i32 = 0;
     while let Some(arg) = args.next() {
         match arg.as_str() {
@@ -309,19 +289,22 @@ fn main() -> io::Result<()> {
                 return edit_file(&cfg.file);
             }
             _ => {
-                printfc!(LogLevel::Fatal, "Unknown argument: {arg}");
+                fatalf!("Unknown argument: {arg}");
                 exit(1);
             }
         }
     }
 
     if !cfg.file.exists() {
-        printfc!(LogLevel::Fatal, "{:?} not found", cfg.file);
+        fatalf!("{:?} not found", cfg.file);
         exit(1);
     }
 
     let cfg = cfg;
+
     let result = run(&cfg, &mut operations);
+
     println!("{} operations were performed.", operations);
+
     result
 }
