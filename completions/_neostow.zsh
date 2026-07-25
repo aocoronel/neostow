@@ -1,5 +1,7 @@
 #compdef neostow
 
+# This file was manually written
+
 _neostow() {
   local -a subcommands
 
@@ -44,7 +46,6 @@ _neostow() {
       ;;
   esac
 }
-
 
 _neostow_get_FILE() {
   local results
