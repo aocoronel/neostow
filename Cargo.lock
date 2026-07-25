@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "neostow-rs"
+name = "neostow"
 version = "0.1.0"
