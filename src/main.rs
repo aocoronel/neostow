@@ -29,7 +29,7 @@ struct Config {
 fn help() {
     println!(
         "\
-neostow | The Declarative GNU Stow
+neostow | Declarative symbolic link manager
 
 Usage:  neostow [OPTIONS] <COMMAND>
 
