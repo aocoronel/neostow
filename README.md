@@ -1,97 +1,74 @@
-# neostow
+* neostow
 
-`neostow` is a tool that streamline the process to manage symlinks similarly to how GNU `stow` works, but using a `.neostow` file, instead. It allows more flexible symlink management, enabling the creation of symlinks from a relative source to anywhere on your computer.
+~neostow~ is a tool that streamline the process to manage symlinks similarly to how GNU ~stow~ works, but using a ~.neostow~ file, instead. It allows more flexible symlink management, enabling the creation of symlinks from a relative source to anywhere on your computer.
 
-This declarative nature allows to easily make reproducible and granular symlinking, unlike `stow`. However, this project does not aims to fully replace it, but to give a declarative feature missing from it.
+This declarative nature allows to easily make reproducible and granular symlinking, unlike ~stow~. However, this project does not aims to fully replace it, but to give a declarative feature missing from it.
 
-This tool is useful to keep files and directories organized in a single centralized place, while also having them across the system. Differently, than `stow`, which allows you to place some files into a different target, other than the parent directory, `neostow` aims to further improve this functionality.
+This tool is useful to keep files and directories organized in a single centralized place, while also having them across the system. Differently, than ~stow~, which allows you to place some files into a different target, other than the parent directory, ~neostow~ aims to further improve this functionality.
 
-With `neostow` each file or directory can be symlinked to a specific part of the system, and not the project as a whole. There is not ignore file, and no need to adjust the folder layout to achieve your goals. If your `neostow` does not explicitly specify an operation, it won't touch a single file.
+With ~neostow~ each file or directory can be symlinked to a specific part of the system, and not the project as a whole. There is not ignore file, and no need to adjust the folder layout to achieve your goals. If your ~neostow~ does not explicitly specify an operation, it won't touch a single file.
 
-## Features
+** Features
 
-- **Flexible symlink creation**: Create symlinks from any relative source to any destination.
-- **Per-project file**: Maintain a `.neostow` file per project.
-- **Overwrite symlinks**: Optionally overwrite existing symlinks.
-- **Remove symlinks**: Easily remove all created symlinks.
-- **Preview operations**: Preview what operations would run.
+- ~ln~ *alternative*: ~ln~, but with relative path support
+- *Flexible symlink creation*: Create symlinks from any relative source to any destination.
+- *Per-project file*: Maintain a ~.neostow~ file per project.
+- *Overwrite symlinks*: Optionally overwrite existing symlinks.
+- *Remove symlinks*: Easily remove all created symlinks.
+- *Preview operations*: Preview what operations would run.
 
-## Usage
+** Usage
 
-`neostow` reads from a `.neostow` file in the current directory to determine which symlinks to create.
+~neostow~ reads from a ~.neostow~ file in the current directory to determine which symlinks to create. In case ~.neostow~ can't be found, it looks up the directory tree, until it finds it.
 
-The `.neostow` file should contain lines in the following format: `source=destination`.
+The ~.neostow~ file should contain lines in the following format: ~source=destination~.
 
-See the manpage(1) at `FILES` for more details. Or give at look at the [example file](https://github.com/aocoronel/neostow-c/blob/main/test/.neostow) and [Examples](#examples).
+See the manpage(1) at ~FILES~ for more details. Or give at look at the [[#examples][Examples]].
 
-```console
-neostow | Declarative symbolic link manager
+#+BEGIN_SRC 
+  Usage:
+  	src [src] [dst] [-delete] [-dry] [-force] [-verbose] [-version]
+  Flags:
+  	-src:<string>  | Source file, or neostow file
+  	-dst:<string>  | Destination
+  	               |
+  	-delete        | Delete symlinks
+  	-dry           | Dry mode
+  	-force         | Force operation
+  	-verbose       | Enable dubugging
+  	-version       | Print version
+  Examples:
+  ./neostow .neostow ; loads .neostow file
+  ./neostow          ; loads .neostow file
+  ./neostow README.md ~/todo ; symlinks README.md to ~/todo
+#+END_SRC
 
-Usage:  neostow [OPTIONS] <COMMAND>
+*** Environment Variables
 
-Commands:
-  delete
-          Delete symlinks
-  edit
-          Edit the neostow file
+- ~NEOSTOW_FILE~: replaces the default file, if none is provided
 
-Options:
-  -D, --debug
-          Enables debug verbosity
-  -F, --force
-          Skip prompt dialogs
-  -V, --verbose
-          Enable verbosity
-  -f, --file <FILE>
-          Load an alternative neostow file
-  -d, --dry
-          Describe potential operations
-  -h, --help
-          Displays this message and exits
-  -o, --overwrite
-          Overwrite existing symlinks
-  -v, --version
-          Displays program version
-```
+*** Configuration File
 
-### Configuration File
+The ~.neostow~ file should be placed in the root of your project directory.
 
-The `.neostow` file should be placed in the root of your project directory.
+**** Examples
 
-#### Examples
+Example ~.neostow~ file:
 
-Example `.neostow` file:
+#+BEGIN_SRC 
+config/myconfig.txt=/home/username/.config/myconfig/ ; links myconfig.txt to ~/.config/myconfig/
+scripts/myscript.sh=/home/username/bin/myscript/     ; links myscript.sh to ~/bin/myscrypt/
+myfile=$HOME/Downloads                               ; links myfile to ~/Downloads
+#+END_SRC
 
-```text
-config/myconfig.txt=/home/username/.config/myconfig/ # links myconfig.txt to ~/.config/myconfig/
-scripts/myscript.sh=/home/username/bin/myscript/ # links myscript.sh to ~/bin/myscrypt/
-myfile=$HOME/Downloads # links myfile to ~/Downloads
-```
+The left side paths are relative to the current directory where the ~.neostow~ file is found.
 
-The left side paths are relative to the current directory where the `.neostow` file is found.
+Case ~NEOSTOW_FILE~ is defined, when using ~neostow~ as a ~ln~ replacement, it will automatically add the symlink entry to the file.
 
-## Integrations
-
-### [Just](https://github.com/casey/just)
-
-`just` is a handy way to save and run `neostow` commands from any directory within the project.
-
-Because, `neostow` has the limitation to only find `.neostow` files in the current directory, `just` gives an extra functionality. Integrating both, allows you to run `neostow` from the root of the project, thus finding the `.neostow` file.
-
-In or `justfile`, you may create a recipe like this:
-
-```just
-# Neostow: Overwrite
-neostow:
-  neostow -o
-```
-
-Then, from any child directory where this `justfile` was placed, you can just run `just neostow`, and it will run the configured recipe.
-
-## Notes
+** Notes
 
 This program was only tested in a Linux machine.
 
-## License
+** License
 
 This repository is licensed under the MIT License, a very permissive license that allows you to use, modify, copy, distribute and more.
