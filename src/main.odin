@@ -10,6 +10,8 @@ import "core:log"
 import "core:os"
 import "core:strings"
 
+VERSION :: "0.2.0"
+
 Error :: os.Error
 
 Option :: struct {
@@ -372,7 +374,7 @@ main :: proc() {
 	flags.parse_or_exit(&opt, os.args, .Odin)
 
 	if opt.version {
-		fmt.println("0.1.0")
+		fmt.println(VERSION)
 		return
 	}
 
