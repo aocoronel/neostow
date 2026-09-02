@@ -16,17 +16,11 @@ _neostow() {
   prev="${COMP_WORDS[COMP_CWORD - 1]}"
   case "${cur}" in
   -*)
-    _complete " --file -f --debug -D --dry -d --overwrite -o --help -h --force -F --verbose -V --version -v"
+    _complete " -src -dst -delete -dry -force -verbose -version"
     return 0
     ;;
   esac
-  case "${prev}" in
-  -f | --file)
-    _complete "$(_FILE)"
-    return 0
-    ;;
-  esac
-  _complete "edit delete"
+  _complete "$(_FILE)"
   return 0
 }
 
