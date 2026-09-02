@@ -8,6 +8,8 @@ This tool is useful to keep files and directories organized in a single centrali
 
 With ~neostow~ each file or directory can be symlinked to a specific part of the system, and not the project as a whole. There is not ignore file, and no need to adjust the folder layout to achieve your goals. If your ~neostow~ does not explicitly specify an operation, it won't touch a single file.
 
+The changelog is available here: [[./CHANGELOG.org][Changelog]].
+
 ** Features
 
 - ~ln~ *alternative*: ~ln~, but with relative path support
@@ -64,6 +66,10 @@ myfile=$HOME/Downloads                               ; links myfile to ~/Downloa
 The left side paths are relative to the current directory where the ~.neostow~ file is found.
 
 Case ~NEOSTOW_FILE~ is defined, when using ~neostow~ as a ~ln~ replacement, it will automatically add the symlink entry to the file.
+
+** Completions
+
+Completions for ~bash~ and ~zsh~ are available in ~./completions~. These were hand written.
 
 ** Notes
 
