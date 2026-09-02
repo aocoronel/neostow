@@ -23,7 +23,7 @@ With ~neostow~ each file or directory can be symlinked to a specific part of the
 
 The ~.neostow~ file should contain lines in the following format: ~source=destination~.
 
-See the manpage(1) at ~FILES~ for more details. Or give at look at the [[#examples][Examples]].
+See the [[#examples][Examples]] for more details.
 
 #+BEGIN_SRC 
   Usage:
