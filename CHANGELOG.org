@@ -1,0 +1,28 @@
+* Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on Keep a Changelog, some adaptation apply: https://keepachangelog.com/en/1.1.0/.
+
+This project also adheres to Semantic Versioning: https://semver.org/spec/v2.0.0.html.
+
+** [0.2.0] 2026-09-02
+
+The project has been rewritten in [[https://odin-lang.org/][Odin]].
+
+*** Added
+
+- ~.neostow~ file can be searched up in the directory tree.
+- ~NEOSTOW_FILE~: replaces the default file, if none is provided
+- ~neostow~ can be used as ~ln~ replacement.
+- When ~neostow~ is used as ~ln~ replacement, and ~NEOSTOW_FILE~ is set, it can automatically add the symlink operation to the file.
+
+*** Removed
+
+- ~delete~ and ~edit~ commands were removed.
+- All short flags were removed.
+- ~--debug~, ~--file~ and ~--overwrite~ flags were removed.
+
+** [0.1.0] 2026-10-19
+
+Initial release
