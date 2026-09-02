@@ -1,5 +1,4 @@
-
-package sln
+package neostow
 
 import "base:runtime"
 import "core:encoding/ini"
