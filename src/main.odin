@@ -139,7 +139,7 @@ expand_env :: proc(
 dir :: proc(path: string) -> (dir_name: string, err: Error) {
 	dir_name = os.dir(path)
 	if len(dir_name) == 0 {
-		dir_name = os.getwd(context.allocator) or_return
+		dir_name = os.getwd(context.temp_allocator) or_return
 	}
 	return
 }
