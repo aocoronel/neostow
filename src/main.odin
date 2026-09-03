@@ -311,12 +311,10 @@ change_dir :: proc(src: string) -> Error {
 
 	for {
 		candidate := strings.concatenate({cwd, "/", target}, context.allocator) or_return
-		fmt.println(candidate)
 		found := exists(candidate) == nil
 		delete(candidate)
 
 		if found {
-			fmt.println("changing to:", cwd)
 			os.change_directory(cwd)
 			return nil
 		}
