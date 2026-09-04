@@ -248,12 +248,14 @@ dotfile :: proc(config: string, flags: bit_set[Flags] = nil) -> Error {
 
 		// default section
 		if len(it.it.section) == 0 {
-			if no_value {
-				log.errorf("default section doesn't support entries without values")
-				continue
-			}
-			dst = expanded_value
 			src = expanded_key
+			if no_value {
+				cwd := os.getwd(context.temp_allocator) or_return
+				dir_name := os.dir(cwd)
+				dst = strings.concatenate({dir_name, "/"}) or_return
+			} else {
+				dst = expanded_value
+			}
 		} else {
 			src = expanded_key
 
