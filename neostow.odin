@@ -283,6 +283,9 @@ dotfile :: proc(config: string, flags: bit_set[Flags] = nil) -> Error {
 		} else {
 			source_error, err := symlink(src, dst, flags)
 			if err != nil {
+				if err == .Exist && !verbose {
+					continue
+				}
 				if source_error {
 					log.errorf("[%s:%d]: %s: %s", config, it.line, os.error_string(err), src)
 				} else {
