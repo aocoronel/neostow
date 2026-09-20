@@ -67,6 +67,16 @@ remove :: proc(path: string, flags: bit_set[Flags] = nil) -> Error {
 	return nil
 }
 
+basename :: proc(path: string) -> string {
+	base := os.base(path)
+	for i := len(base) - 1; i >= 0 && !os.is_path_separator(base[i]); i -= 1 {
+		if base[i] == '.' {
+			return base[:i]
+		}
+	}
+	return base
+}
+
 ln :: proc(src, dst: string, flags: bit_set[Flags] = nil) -> (err: Error) {
 	absolute_src := os.get_absolute_path(src, context.allocator) or_return
 	defer delete(absolute_src)
@@ -80,7 +90,7 @@ ln :: proc(src, dst: string, flags: bit_set[Flags] = nil) -> (err: Error) {
 
 	if !(.Dry in flags) {
 		os.make_directory_all(os.dir(dst))
-		err = os.symlink(absolute_src, dst)
+		err = os.symlink(basename(absolute_src), dst)
 		if err != nil do return
 	}
 	if verbose do fmt.eprintln(src, "->", dst)
