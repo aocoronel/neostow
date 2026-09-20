@@ -90,7 +90,7 @@ ln :: proc(src, dst: string, flags: bit_set[Flags] = nil) -> (err: Error) {
 
 	if !(.Dry in flags) {
 		os.make_directory_all(os.dir(dst))
-		err = os.symlink(basename(absolute_src), dst)
+		err = os.symlink(absolute_src, dst)
 		if err != nil do return
 	}
 	if verbose do fmt.eprintln(src, "->", dst)
@@ -246,12 +246,16 @@ dotfile :: proc(config: string, flags: bit_set[Flags] = nil) -> Error {
 		key, value, ok, no_value := iterate(&it)
 		if !ok do break
 
+		base: bool = true
 		src, dst, expanded_value, expanded_key: string
 
 		expanded_key = expand_env(key, context.temp_allocator) or_return
 
 		if no_value {
 			expanded_value = "."
+			base = false
+			// .config/dunst
+			// Should symlink to parent, including '.config' dir
 		} else {
 			expanded_value = expand_env(value, context.temp_allocator) or_return
 		}
@@ -291,6 +295,7 @@ dotfile :: proc(config: string, flags: bit_set[Flags] = nil) -> Error {
 				log.errorf("[%s:%d]: %s: %s", config, it.line, os.error_string(err), dst)
 			}
 		} else {
+			source := basename(src) if base else src
 			source_error, err := symlink(src, dst, flags)
 			if err != nil {
 				if err == .Exist && !verbose {
