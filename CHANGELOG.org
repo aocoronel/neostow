@@ -6,6 +6,17 @@ The format is based on Keep a Changelog, some adaptation apply: https://keepacha
 
 This project also adheres to Semantic Versioning: https://semver.org/spec/v2.0.0.html.
 
+** [0.3.0] 2026-09-20
+
+*** Added
+
+- In the default section, if the destination isn't defined, assume it to be the parent directory.
+
+*** Changed
+
+- Only the basename from the source is used to symlink, if a destination is provided.
+- Ignore `file exist` error, if not verbose. This error happens commonly if `neostow` is ran twice, where the symlink fails due to existing symlink file.
+
 ** [0.2.0] 2026-09-02
 
 The project has been rewritten in [[https://odin-lang.org/][Odin]].

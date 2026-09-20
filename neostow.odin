@@ -9,7 +9,7 @@ import "core:log"
 import "core:os"
 import "core:strings"
 
-VERSION :: "0.2.0"
+VERSION :: "0.3.0"
 
 Error :: os.Error
 
