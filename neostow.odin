@@ -78,8 +78,7 @@ basename :: proc(path: string) -> string {
 }
 
 ln :: proc(src, dst: string, flags: bit_set[Flags] = nil) -> (err: Error) {
-	absolute_src := os.get_absolute_path(src, context.allocator) or_return
-	defer delete(absolute_src)
+	absolute_src := os.get_absolute_path(src, context.temp_allocator) or_return
 
 	verbose: bool = .Verbose in flags
 
@@ -324,15 +323,13 @@ is_nil :: proc(s: string) -> bool {
 }
 
 change_dir :: proc(src: string) -> Error {
-	cwd := os.getwd(context.allocator) or_return
-	defer delete(cwd)
+	cwd := os.getwd(context.temp_allocator) or_return
 
 	target := src
 
 	for {
-		candidate := strings.concatenate({cwd, "/", target}, context.allocator) or_return
+		candidate := strings.concatenate({cwd, "/", target}, context.temp_allocator) or_return
 		found := exists(candidate) == nil
-		delete(candidate)
 
 		if found {
 			os.change_directory(cwd)
@@ -358,7 +355,7 @@ add_entry :: proc(env: string, src, dst: string) -> Error {
 	{
 		file, err := open(env, {.Read})
 		if err == nil {
-			contents = os.read_entire_file(file, context.allocator) or_return
+			contents = os.read_entire_file(file, context.temp_allocator) or_return
 		}
 	}
 
@@ -381,9 +378,8 @@ add_entry :: proc(env: string, src, dst: string) -> Error {
 }
 
 main :: proc() {
-	neostow_env: string = os.get_env("NEOSTOW_FILE", context.allocator)
-	defer delete(neostow_env)
-	has_env: bool = !is_nil(neostow_env)
+	neostow_file: string = os.lookup_env("NEOSTOW_FILE", context.temp_allocator) or_else ".neostow"
+	has_env: bool = !is_nil(neostow_file)
 
 	codepath: Codepath
 
@@ -408,7 +404,7 @@ main :: proc() {
 
 	if is_nil(opt.dst) {
 		codepath = .Dotfile
-		if is_nil(opt.src) do opt.src = neostow_env if has_env else ".neostow"
+		if is_nil(opt.src) do opt.src = neostow_file
 		// This replaces just
 		change_dir_err := change_dir(opt.src)
 		switch change_dir_err {
@@ -441,7 +437,7 @@ main :: proc() {
 		if err == nil {
 			// add entry, only when env is set
 			if has_env {
-				err := add_entry(neostow_env, opt.src, opt.dst)
+				err := add_entry(neostow_file, opt.src, opt.dst)
 				if err != nil do exit_error(err)
 			}
 		}
