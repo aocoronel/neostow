@@ -392,8 +392,8 @@ main :: proc() {
 }
 
 _main :: proc() -> (err: os.Error) {
-	neostow_file: string = os.lookup_env("NEOSTOW_FILE", context.temp_allocator) or_else ".neostow"
-	has_env: bool = !is_nil(neostow_file)
+	neostow_file, has_env := os.lookup_env("NEOSTOW_FILE", context.temp_allocator)
+	if !has_env do neostow_file = ".neostow"
 
 	codepath: Codepath
 
