@@ -313,11 +313,6 @@ dotfile :: proc(config: string, flags: bit_set[Flags] = nil) -> Error {
 	return nil
 }
 
-exit_error :: proc(args: ..any, sep := " ", location := #caller_location) -> ! {
-	log.error(args, sep, location)
-	os.exit(1)
-}
-
 is_nil :: proc(s: string) -> bool {
 	return len(s) == 0
 }
@@ -378,19 +373,6 @@ add_entry :: proc(env: string, src, dst: string) -> Error {
 }
 
 main :: proc() {
-	neostow_file: string = os.lookup_env("NEOSTOW_FILE", context.temp_allocator) or_else ".neostow"
-	has_env: bool = !is_nil(neostow_file)
-
-	codepath: Codepath
-
-	opt: Option
-	flags.parse_or_exit(&opt, os.args, .Odin)
-
-	if opt.version {
-		fmt.println(VERSION)
-		return
-	}
-
 	log.Level_Headers = {
 		0 ..< 10 = "debug: ",
 		10 ..< 20 = "info: ",
@@ -402,6 +384,27 @@ main :: proc() {
 	context.logger = log.create_console_logger(opt = {.Level, .Terminal_Color})
 	defer log.destroy_console_logger(context.logger)
 
+	err := _main()
+	if err != nil {
+		log.error(err)
+		os.exit(1)
+	}
+}
+
+_main :: proc() -> (err: os.Error) {
+	neostow_file: string = os.lookup_env("NEOSTOW_FILE", context.temp_allocator) or_else ".neostow"
+	has_env: bool = !is_nil(neostow_file)
+
+	codepath: Codepath
+
+	opt: Option
+	flags.parse_or_exit(&opt, os.args, .Odin)
+
+	if opt.version {
+		fmt.println(VERSION)
+		return nil
+	}
+
 	if is_nil(opt.dst) {
 		codepath = .Dotfile
 		if is_nil(opt.src) do opt.src = neostow_file
@@ -411,7 +414,7 @@ main :: proc() {
 		case nil:
 			break
 		case:
-			exit_error(change_dir_err)
+			return change_dir_err
 		case .Not_Exist:
 			log.errorf("could not find '%s' in current directory or any parent", opt.src)
 			os.exit(1)
@@ -424,11 +427,7 @@ main :: proc() {
 	if opt.dry do flags += {.Dry}
 	if opt.delete do flags += {.Delete}
 
-	err: Error
-	finfo: os.File_Info
-	finfo, err = os.stat(opt.src, context.temp_allocator)
-	if err != nil do exit_error(err)
-
+	finfo := os.stat(opt.src, context.temp_allocator) or_return
 	type := finfo.type
 
 	switch codepath {
@@ -437,15 +436,12 @@ main :: proc() {
 		if err == nil {
 			// add entry, only when env is set
 			if has_env {
-				err := add_entry(neostow_file, opt.src, opt.dst)
-				if err != nil do exit_error(err)
+				add_entry(neostow_file, opt.src, opt.dst) or_return
 			}
 		}
 	case .Dotfile:
 		err = dotfile(opt.src, flags)
 	}
 
-	if err != nil do exit_error(err)
-
-	return
+	return err
 }
